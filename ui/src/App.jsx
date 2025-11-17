@@ -2,6 +2,9 @@ import { useState } from 'react';
 import Header from './components/Header';
 import MenuSection from './components/MenuSection';
 import CartSection from './components/CartSection';
+import AdminDashboard from './components/AdminDashboard';
+import InventorySection from './components/InventorySection';
+import OrderStatusSection from './components/OrderStatusSection';
 import './App.css';
 
 // 임시 메뉴 데이터
@@ -79,13 +82,25 @@ function App() {
   const [menus] = useState(initialMenus);
   const [cartItems, setCartItems] = useState([]);
   const [menuResetKey, setMenuResetKey] = useState(0);
+  
+  // 관리자 화면 상태
+  const [orders, setOrders] = useState([]);
+  const [inventory, setInventory] = useState([
+    { menuId: 1, menuName: '아메리카노 (ICE)', stock: 10 },
+    { menuId: 2, menuName: '아메리카노 (HOT)', stock: 10 },
+    { menuId: 3, menuName: '카페라떼', stock: 10 }
+  ]);
+
+  // 대시보드 통계 계산
+  const dashboardStats = {
+    totalOrders: orders.length,
+    receivedOrders: orders.filter(o => o.status === 'pending' || o.status === 'received').length,
+    inProgressOrders: orders.filter(o => o.status === 'in_progress').length,
+    completedOrders: orders.filter(o => o.status === 'completed').length
+  };
 
   const handleNavigate = (page) => {
     setCurrentPage(page);
-    // 관리자 페이지는 나중에 구현
-    if (page === 'admin') {
-      alert('관리자 페이지는 준비 중입니다.');
-    }
   };
 
   const handleAddToCart = (item) => {
@@ -180,10 +195,56 @@ function App() {
     // 주문 완료 메시지 표시
     alert('주문이 완료되었습니다.');
     
+    // 주문을 관리자 화면의 주문 목록에 추가
+    const newOrder = {
+      orderId: Date.now(), // 임시 ID
+      orderDate: new Date().toISOString(),
+      items: orderData.items,
+      totalAmount: totalAmount,
+      status: 'pending' // 주문 접수 상태
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    
+    // 주문된 메뉴에 따라 재고 감소
+    setInventory(prev => {
+      return prev.map(invItem => {
+        // 주문된 아이템 중에서 해당 메뉴 찾기
+        const orderedItem = orderData.items.find(item => item.menuId === invItem.menuId);
+        if (orderedItem) {
+          // 재고에서 주문 수량만큼 감소
+          const newStock = Math.max(0, invItem.stock - orderedItem.quantity);
+          return { ...invItem, stock: newStock };
+        }
+        return invItem;
+      });
+    });
+    
     // 화면 전체 초기화
     setCartItems([]);
     // 메뉴 카드의 옵션 선택 상태도 초기화하기 위해 key 변경
     setMenuResetKey(prev => prev + 1);
+  };
+
+  // 재고 업데이트
+  const handleUpdateStock = (menuId, newStock) => {
+    setInventory(prev => 
+      prev.map(item => 
+        item.menuId === menuId 
+          ? { ...item, stock: Math.max(0, newStock) }
+          : item
+      )
+    );
+  };
+
+  // 주문 상태 업데이트
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setOrders(prev =>
+      prev.map(order =>
+        order.orderId === orderId
+          ? { ...order, status: newStatus }
+          : order
+      )
+    );
   };
 
   return (
@@ -194,6 +255,19 @@ function App() {
           <>
             <MenuSection key={menuResetKey} menus={menus} onAddToCart={handleAddToCart} />
             <div style={{ height: '300px' }}></div> {/* 장바구니 공간 확보 */}
+          </>
+        )}
+        {currentPage === 'admin' && (
+          <>
+            <AdminDashboard stats={dashboardStats} />
+            <InventorySection 
+              inventory={inventory} 
+              onUpdateStock={handleUpdateStock}
+            />
+            <OrderStatusSection 
+              orders={orders.filter(o => o.status !== 'completed')} 
+              onUpdateOrderStatus={handleUpdateOrderStatus}
+            />
           </>
         )}
       </main>
