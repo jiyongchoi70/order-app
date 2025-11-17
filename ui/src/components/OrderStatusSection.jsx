@@ -27,11 +27,12 @@ function OrderStatusSection({ orders, onUpdateOrderStatus }) {
   };
 
   const getStatusButton = (order) => {
+    const orderId = order.id || order.orderId;
     if (order.status === 'pending') {
       return (
         <button
           className="status-button receive-button"
-          onClick={() => onUpdateOrderStatus(order.orderId, 'received')}
+          onClick={() => onUpdateOrderStatus(orderId, 'received')}
         >
           주문 접수
         </button>
@@ -40,7 +41,7 @@ function OrderStatusSection({ orders, onUpdateOrderStatus }) {
       return (
         <button
           className="status-button start-button"
-          onClick={() => onUpdateOrderStatus(order.orderId, 'in_progress')}
+          onClick={() => onUpdateOrderStatus(orderId, 'in_progress')}
         >
           제조 시작
         </button>
@@ -49,7 +50,7 @@ function OrderStatusSection({ orders, onUpdateOrderStatus }) {
       return (
         <button
           className="status-button complete-button"
-          onClick={() => onUpdateOrderStatus(order.orderId, 'completed')}
+          onClick={() => onUpdateOrderStatus(orderId, 'completed')}
         >
           제조 완료
         </button>
@@ -66,7 +67,7 @@ function OrderStatusSection({ orders, onUpdateOrderStatus }) {
           <p className="empty-orders">주문이 없습니다.</p>
         ) : (
           orders.map(order => (
-            <div key={order.orderId} className="order-card">
+            <div key={order.id || order.orderId} className="order-card">
               <div className="order-info">
                 <div className="order-date">{formatDate(order.orderDate)}</div>
                 <div className="order-items">{formatOrderItems(order.items)}</div>

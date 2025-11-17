@@ -1,11 +1,15 @@
 .app {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
+  overflow: hidden;
 }
 
 .main-content {
   flex: 1;
-  padding-bottom: 300px; /* 장바구니 공간 확보 */
+  padding-top: 80px; /* 헤더 높이만큼 상단 여백 */
+  padding-bottom: 80px; /* 상단과 동일한 하단 여백 */
+  overflow-y: auto;
+  overflow-x: hidden;
 }

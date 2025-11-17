@@ -8,14 +8,14 @@ function InventorySection({ inventory, onUpdateStock }) {
   };
 
   const handleIncrease = (menuId) => {
-    const item = inventory.find(inv => inv.menuId === menuId);
+    const item = inventory.find(inv => (inv.menuId || inv.menu_id) === menuId);
     if (item) {
       onUpdateStock(menuId, item.stock + 1);
     }
   };
 
   const handleDecrease = (menuId) => {
-    const item = inventory.find(inv => inv.menuId === menuId);
+    const item = inventory.find(inv => (inv.menuId || inv.menu_id) === menuId);
     if (item && item.stock > 0) {
       onUpdateStock(menuId, item.stock - 1);
     }
@@ -27,9 +27,11 @@ function InventorySection({ inventory, onUpdateStock }) {
       <div className="inventory-grid">
         {inventory.map(item => {
           const status = getStockStatus(item.stock);
+          const menuId = item.menuId || item.menu_id;
+          const menuName = item.menuName || item.menu_name || item.name || `메뉴 ${menuId}`;
           return (
-            <div key={item.menuId} className="inventory-card">
-              <h3 className="inventory-menu-name">{item.menuName}</h3>
+            <div key={menuId} className="inventory-card">
+              <h3 className="inventory-menu-name">{menuName}</h3>
               <div className="inventory-stock">
                 <span className="stock-quantity">{item.stock}개</span>
                 <span className={`stock-status ${status.className}`}>
@@ -39,14 +41,14 @@ function InventorySection({ inventory, onUpdateStock }) {
               <div className="inventory-controls">
                 <button
                   className="stock-button decrease"
-                  onClick={() => handleDecrease(item.menuId)}
+                  onClick={() => handleDecrease(menuId)}
                   disabled={item.stock === 0}
                 >
                   -
                 </button>
                 <button
                   className="stock-button increase"
-                  onClick={() => handleIncrease(item.menuId)}
+                  onClick={() => handleIncrease(menuId)}
                 >
                   +
                 </button>

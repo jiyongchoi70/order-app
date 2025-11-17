@@ -1,6 +1,6 @@
 import './CartSection.css';
 
-function CartSection({ cartItems, onOrder, onRemoveItem }) {
+function CartSection({ cartItems, onOrder, onRemoveItem, onUpdateQuantity }) {
   const totalAmount = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
   const formatCartItemName = (item) => {
@@ -24,11 +24,37 @@ function CartSection({ cartItems, onOrder, onRemoveItem }) {
               {cartItems.map((item, index) => (
                 <li key={index} className="cart-item">
                   <span className="item-name">
-                    {formatCartItemName(item)} X {item.quantity}
+                    {formatCartItemName(item)}
                   </span>
+                  <div className="item-quantity-controls">
+                    {onUpdateQuantity && (
+                      <>
+                        <button
+                          className="quantity-button decrease"
+                          onClick={() => {
+                            if (item.quantity > 1) {
+                              onUpdateQuantity(index, item.quantity - 1);
+                            }
+                          }}
+                          disabled={item.quantity <= 1}
+                          aria-label="수량 감소"
+                        >
+                          -
+                        </button>
+                        <span className="quantity-value">{item.quantity}</span>
+                        <button
+                          className="quantity-button increase"
+                          onClick={() => onUpdateQuantity(index, item.quantity + 1)}
+                          aria-label="수량 증가"
+                        >
+                          +
+                        </button>
+                      </>
+                    )}
+                  </div>
                   <div className="item-actions">
                     <span className="item-price">
-                      - {item.totalPrice.toLocaleString()}원
+                      {item.totalPrice.toLocaleString()}원
                     </span>
                     {onRemoveItem && (
                       <button
