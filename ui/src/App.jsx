@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Header from './components/Header';
 import MenuSection from './components/MenuSection';
 import CartSection from './components/CartSection';
 import AdminDashboard from './components/AdminDashboard';
 import InventorySection from './components/InventorySection';
 import OrderStatusSection from './components/OrderStatusSection';
+import { calculateItemPrice } from './utils/priceUtils';
 import './App.css';
 
 // 임시 메뉴 데이터
@@ -91,19 +92,26 @@ function App() {
     { menuId: 3, menuName: '카페라떼', stock: 10 }
   ]);
 
-  // 대시보드 통계 계산
-  const dashboardStats = {
+  // 대시보드 통계 계산 (useMemo로 최적화)
+  const dashboardStats = useMemo(() => ({
     totalOrders: orders.length,
     receivedOrders: orders.filter(o => o.status === 'pending' || o.status === 'received').length,
     inProgressOrders: orders.filter(o => o.status === 'in_progress').length,
     completedOrders: orders.filter(o => o.status === 'completed').length
-  };
+  }), [orders]);
 
   const handleNavigate = (page) => {
     setCurrentPage(page);
   };
 
   const handleAddToCart = (item) => {
+    // 재고 확인
+    const inventoryItem = inventory.find(inv => inv.menuId === item.menuId);
+    if (inventoryItem && inventoryItem.stock === 0) {
+      alert(`${item.menuName}은(는) 품절되었습니다.`);
+      return;
+    }
+
     setCartItems(prev => {
       // 옵션 정규화 함수 - 옵션 ID를 문자열로 변환하여 비교
       const normalizeOptions = (options) => {
@@ -131,15 +139,21 @@ function App() {
         const updated = [...prev];
         const existingItem = { ...updated[existingItemIndex] };
         
-        // 수량 증가
-        existingItem.quantity = existingItem.quantity + 1;
+        // 재고 확인 (장바구니에 있는 수량 + 추가하려는 수량)
+        const totalQuantity = existingItem.quantity + 1;
+        if (inventoryItem && totalQuantity > inventoryItem.stock) {
+          alert(`재고가 부족합니다. (현재 재고: ${inventoryItem.stock}개)`);
+          return prev;
+        }
         
-        // 개당 가격 계산 (기본가격 + 옵션가격)
-        const unitPrice = existingItem.basePrice + 
-          (existingItem.selectedOptions || []).reduce((sum, opt) => {
-            const optPrice = opt.price || opt.optionPrice || 0;
-            return sum + optPrice;
-          }, 0);
+        // 수량 증가
+        existingItem.quantity = totalQuantity;
+        
+        // 개당 가격 계산
+        const unitPrice = calculateItemPrice(
+          existingItem.basePrice,
+          existingItem.selectedOptions
+        );
         
         // 총 가격 = 개당 가격 * 수량
         existingItem.totalPrice = unitPrice * existingItem.quantity;
@@ -148,8 +162,7 @@ function App() {
         return updated;
       } else {
         // 새 아이템 추가 (수량 1로 시작)
-        const unitPrice = item.basePrice + 
-          (item.selectedOptions || []).reduce((sum, opt) => sum + (opt.price || 0), 0);
+        const unitPrice = calculateItemPrice(item.basePrice, item.selectedOptions);
         
         const newItem = {
           menuId: item.menuId,
@@ -174,6 +187,18 @@ function App() {
   const handleOrder = () => {
     if (cartItems.length === 0) {
       alert('장바구니가 비어있습니다.');
+      return;
+    }
+
+    // 주문 전 재고 최종 확인
+    const stockCheck = cartItems.every(item => {
+      const invItem = inventory.find(inv => inv.menuId === item.menuId);
+      if (!invItem) return true; // 재고 정보가 없으면 통과
+      return invItem.stock >= item.quantity;
+    });
+
+    if (!stockCheck) {
+      alert('재고가 부족한 메뉴가 있습니다. 장바구니를 확인해주세요.');
       return;
     }
 
@@ -225,6 +250,11 @@ function App() {
     setMenuResetKey(prev => prev + 1);
   };
 
+  // 장바구니 아이템 삭제
+  const handleRemoveFromCart = (index) => {
+    setCartItems(prev => prev.filter((_, i) => i !== index));
+  };
+
   // 재고 업데이트
   const handleUpdateStock = (menuId, newStock) => {
     setInventory(prev => 
@@ -272,7 +302,11 @@ function App() {
         )}
       </main>
       {currentPage === 'order' && (
-        <CartSection cartItems={cartItems} onOrder={handleOrder} />
+        <CartSection 
+          cartItems={cartItems} 
+          onOrder={handleOrder}
+          onRemoveItem={handleRemoveFromCart}
+        />
       )}
     </div>
   );

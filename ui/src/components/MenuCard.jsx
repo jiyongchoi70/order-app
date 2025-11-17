@@ -38,10 +38,21 @@ function MenuCard({ menu, onAddToCart }) {
     <div className="menu-card">
       <div className="menu-image">
         {menu.image ? (
-          <img src={menu.image} alt={menu.name} />
-        ) : (
-          <div className="image-placeholder">이미지</div>
-        )}
+          <img 
+            src={menu.image} 
+            alt={menu.name}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              const placeholder = e.target.parentElement.querySelector('.image-placeholder');
+              if (placeholder) {
+                placeholder.style.display = 'flex';
+              }
+            }}
+          />
+        ) : null}
+        <div className="image-placeholder" style={{ display: menu.image ? 'none' : 'flex' }}>
+          이미지
+        </div>
       </div>
       <div className="menu-info">
         <h3 className="menu-name">{menu.name}</h3>

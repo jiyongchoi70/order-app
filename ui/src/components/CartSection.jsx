@@ -1,6 +1,6 @@
 import './CartSection.css';
 
-function CartSection({ cartItems, onOrder }) {
+function CartSection({ cartItems, onOrder, onRemoveItem }) {
   const totalAmount = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
   const formatCartItemName = (item) => {
@@ -26,9 +26,20 @@ function CartSection({ cartItems, onOrder }) {
                   <span className="item-name">
                     {formatCartItemName(item)} X {item.quantity}
                   </span>
-                  <span className="item-price">
-                    - {item.totalPrice.toLocaleString()}원
-                  </span>
+                  <div className="item-actions">
+                    <span className="item-price">
+                      - {item.totalPrice.toLocaleString()}원
+                    </span>
+                    {onRemoveItem && (
+                      <button
+                        className="remove-button"
+                        onClick={() => onRemoveItem(index)}
+                        aria-label="장바구니에서 삭제"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
