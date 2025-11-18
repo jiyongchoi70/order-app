@@ -6,7 +6,37 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 미들웨어
-app.use(cors());
+// CORS 설정: 프론트엔드 도메인 허용
+const corsOptions = {
+  origin: function (origin, callback) {
+    // 환경 변수에서 허용된 origin 목록 가져오기
+    const allowedOrigins = process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : [
+          'http://localhost:5173',
+          'http://localhost:3000',
+          'https://order-app-frontend-rivi.onrender.com',
+          'https://order-app-frontend.onrender.com'
+        ];
+    
+    // origin이 없거나 (같은 도메인) 허용된 목록에 있으면 허용
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // 개발 환경에서는 모든 origin 허용
+      if (process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS policy에 의해 차단되었습니다.'));
+      }
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
