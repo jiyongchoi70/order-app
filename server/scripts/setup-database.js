@@ -7,17 +7,66 @@ async function setupDatabase() {
   // Render.com에서는 DATABASE_URL을 사용, 로컬에서는 개별 환경 변수 사용
   let pool;
   
-  if (process.env.DATABASE_URL) {
+  // DATABASE_URL 또는 DB_HOST에 PostgreSQL URL이 있는지 확인
+  // DB_HOST에 URL이 들어있는 경우도 처리
+  let databaseUrl = process.env.DATABASE_URL;
+  
+  // DATABASE_URL이 PostgreSQL URL이 아니고, DB_HOST에 URL이 있으면 DB_HOST 사용
+  const isCurrentUrlPostgres = databaseUrl && (
+    databaseUrl.startsWith('postgres://') || 
+    databaseUrl.startsWith('postgresql://')
+  );
+  
+  if (!isCurrentUrlPostgres && process.env.DB_HOST && process.env.DB_HOST.includes('://')) {
+    const dbHostUrl = process.env.DB_HOST;
+    const isDbHostPostgres = dbHostUrl.startsWith('postgres://') || dbHostUrl.startsWith('postgresql://');
+    if (isDbHostPostgres) {
+      databaseUrl = dbHostUrl;
+      console.log('DB_HOST에서 PostgreSQL URL을 감지하여 사용합니다.');
+    }
+  }
+  
+  const isPostgresUrl = databaseUrl && (
+    databaseUrl.startsWith('postgres://') || 
+    databaseUrl.startsWith('postgresql://')
+  );
+  
+  if (databaseUrl && !isPostgresUrl) {
+    console.log('경고: DATABASE_URL이 PostgreSQL 형식이 아닙니다:', databaseUrl.substring(0, 50) + '...');
+  }
+  
+  if (isPostgresUrl) {
     // Render.com 또는 DATABASE_URL이 제공된 경우
     console.log('DATABASE_URL을 사용하여 데이터베이스에 연결합니다...');
+    console.log('연결 정보:', databaseUrl.replace(/:[^:@]+@/, ':****@')); // 비밀번호 숨김
+    
+    // DATABASE_URL이 postgres://로 시작하면 postgresql://로 변환
+    let url = databaseUrl;
+    if (url.startsWith('postgres://')) {
+      url = url.replace('postgres://', 'postgresql://');
+    }
+    
+    // Render.com External Database URL은 항상 SSL이 필요
+    // Internal Database URL도 SSL이 필요할 수 있음
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      connectionString: url,
+      ssl: { rejectUnauthorized: false },
     });
   } else {
     // 로컬 개발 환경: 먼저 postgres 데이터베이스에 연결하여 새 데이터베이스 생성
+    // DB_HOST에 URL이 들어있는 경우는 이미 위에서 처리했으므로 여기서는 hostname만 사용
+    const dbHost = process.env.DB_HOST || 'localhost';
+    
+    // DB_HOST가 URL 형식이면 에러 (이미 위에서 처리되어야 함)
+    if (dbHost.includes('://')) {
+      console.error('오류: DB_HOST에 전체 URL이 들어있습니다.');
+      console.error('해결 방법: .env 파일에서 DB_HOST 대신 DATABASE_URL을 사용하세요.');
+      console.error('예: DATABASE_URL=' + dbHost);
+      throw new Error('DB_HOST에 전체 URL이 들어있습니다. DATABASE_URL 환경 변수를 사용하거나, DB_HOST에는 호스트명만 입력하세요.');
+    }
+    
     const adminPool = new Pool({
-      host: process.env.DB_HOST || 'localhost',
+      host: dbHost,
       port: process.env.DB_PORT || 5432,
       database: 'postgres', // 기본 데이터베이스
       user: process.env.DB_USER || 'postgres',
