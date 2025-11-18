@@ -1,8 +1,8 @@
 -- 샘플 메뉴 데이터 삽입
 INSERT INTO menus (name, description, price, image, stock) VALUES
-('아메리카노 (ICE)', '시원한 아이스 아메리카노', 4000, 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=400', 10),
-('아메리카노 (HOT)', '따뜻한 핫 아메리카노', 4000, 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=400', 10),
-('카페라떼', '부드러운 카페라떼', 4500, 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400', 10),
+('아메리카노 (ICE)', '시원한 아이스 아메리카노', 4000, '/coffee-ice.jpg', 10),
+('아메리카노 (HOT)', '따뜻한 핫 아메리카노', 4000, '/coffee-hot.jpg', 10),
+('카페라떼', '부드러운 카페라떼', 4500, '/coffee-latte.jpg', 10),
 ('카푸치노', '진한 카푸치노', 4500, 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400', 8),
 ('카라멜 마키아토', '달콤한 카라멜 마키아토', 5000, 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400', 8),
 ('바닐라라떼', '향긋한 바닐라라떼', 5000, 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400', 8)

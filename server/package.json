@@ -8,7 +8,8 @@
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:db": "node scripts/test-connection.js",
-    "setup:db": "node scripts/setup-database.js"
+    "setup:db": "node scripts/setup-database.js",
+    "update:images": "node scripts/update-menu-images.js"
   },
   "keywords": ["express", "postgresql", "coffee", "order"],
   "author": "",
