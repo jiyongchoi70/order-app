@@ -15,6 +15,11 @@ app.get('/', (req, res) => {
   res.json({ message: '커피 주문 앱 API 서버' });
 });
 
+// 헬스체크 엔드포인트 (Render.com용)
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // API 라우트
 app.use('/api/menus', require('./routes/menus'));
 app.use('/api/orders', require('./routes/orders'));

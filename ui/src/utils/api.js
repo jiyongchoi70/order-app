@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+// 환경 변수에서 API URL 가져오기 (배포 시), 없으면 로컬 개발용 기본값 사용
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 // API 호출 헬퍼 함수
 async function apiRequest(endpoint, options = {}) {
